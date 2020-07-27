@@ -38,7 +38,12 @@ open class TextMessageCell: MessageContentCell {
 
     /// The label used to display the message's text.
     open var messageLabel = MessageLabel()
-
+    lazy var replyView: UIView = {
+        let view = UIView()
+        return view
+    }()
+    
+    
     // MARK: - Methods
 
     open override func apply(_ layoutAttributes: UICollectionViewLayoutAttributes) {
@@ -98,4 +103,7 @@ open class TextMessageCell: MessageContentCell {
         return messageLabel.handleGesture(touchPoint)
     }
 
+    
 }
+
+

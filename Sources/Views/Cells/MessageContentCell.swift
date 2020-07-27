@@ -68,12 +68,25 @@ open class MessageContentCell: MessageCollectionViewCell {
         return label
     }()
 
+    open var replyImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.alpha = 0
+        if #available(iOS 13.0, *) {
+            imageView.image = UIImage(systemName: "arrow.turn.down.left")
+        } else {
+            // Fallback on earlier versions
+        }
+        return imageView
+    }()
+    
     // Should only add customized subviews - don't change accessoryView itself.
     open var accessoryView: UIView = UIView()
 
     /// The `MessageCellDelegate` for the cell.
     open weak var delegate: MessageCellDelegate?
-
+    var originalPoint = CGPoint()
+    var originalReplyPoint = CGPoint()
+    
     public override init(frame: CGRect) {
         super.init(frame: frame)
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -94,6 +107,7 @@ open class MessageContentCell: MessageCollectionViewCell {
         contentView.addSubview(cellBottomLabel)
         contentView.addSubview(messageContainerView)
         contentView.addSubview(avatarView)
+        contentView.addSubview(replyImage)
     }
 
     open override func prepareForReuse() {
@@ -180,12 +194,35 @@ open class MessageContentCell: MessageCollectionViewCell {
         }
     }
 
-    /// Handle long press gesture, return true when gestureRecognizer's touch point in `messageContainerView`'s frame
-    open override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        let touchPoint = gestureRecognizer.location(in: self)
-        guard gestureRecognizer.isKind(of: UILongPressGestureRecognizer.self) else { return false }
-        return messageContainerView.frame.contains(touchPoint)
+    open override func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
+        let translation = gesture.translation(in: messageContainerView.superview)
+        switch gesture.state {
+        case .began:
+            originalPoint = messageContainerView.center
+            originalReplyPoint = replyImage.center
+            print(translation.x)
+        case .changed:
+            if translation.x > 0 || translation.x <= -50 || translation.y > 0 || translation.y < 0 {
+                break
+            }
+//            gesture.ve
+            messageContainerView.center = CGPoint(x: originalPoint.x + translation.x, y: originalPoint.y)
+            replyImage.center = CGPoint(x: originalReplyPoint.x + translation.x, y: originalReplyPoint.y)
+            replyImage.alpha = abs(translation.x / 30)
+            print(translation.x)
+        case .ended, .cancelled, .failed:
+            replyImage.alpha = 0
+            UIView.animate(withDuration: 0.3) {
+                self.replyImage.center = self.originalReplyPoint
+                self.messageContainerView.center = self.originalPoint
+            }
+            delegate?.didStopSwipe(in: self)
+        default:
+            break
+        }
     }
+    
+    /// Handle long press gesture, return true when gestureRecognizer's touch point in `messageContainerView`'s frame
 
     /// Handle `ContentView`'s tap gesture, return false when `ContentView` doesn't needs to handle gesture
     open func cellContentView(canHandle touchPoint: CGPoint) -> Bool {
@@ -262,6 +299,7 @@ open class MessageContentCell: MessageCollectionViewCell {
         }
 
         messageContainerView.frame = CGRect(origin: origin, size: attributes.messageContainerSize)
+        replyImage.frame = CGRect(origin: CGPoint(x: messageContainerView.frame.maxX + 8, y: messageContainerView.frame.origin.y + 4), size: CGSize(width: 25, height: 25))
     }
 
     /// Positions the cell's top label.
@@ -343,4 +381,19 @@ open class MessageContentCell: MessageCollectionViewCell {
 
         accessoryView.frame = CGRect(origin: origin, size: attributes.accessoryViewSize)
     }
+}
+
+extension MessageContentCell: UIGestureRecognizerDelegate {
+    open override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if let view = gestureRecognizer.view,
+            let gestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer {
+            let translation = gestureRecognizer.translation(in: view)
+            return abs(translation.y) <= abs(translation.x)
+        }
+        
+        let touchPoint = gestureRecognizer.location(in: self)
+        guard gestureRecognizer.isKind(of: UILongPressGestureRecognizer.self) else { return false }
+        return messageContainerView.frame.contains(touchPoint)
+    }
+
 }

@@ -159,6 +159,14 @@ public protocol MessageCellDelegate: MessageLabelDelegate {
     /// method `messageForItem(at:indexPath:messagesCollectionView)`.
     func didStopAudio(in cell: AudioMessageCell)
 
+    /// Triggered when swipe stoped
+    ///
+    /// - Parameters:
+    ///   - cell: The cell where the swipe is stoped.
+    /// You can get a reference to the `MessageType` for the cell by using `UICollectionView`'s
+    /// `indexPath(for: cell)` method. Then using the returned `IndexPath` with the `MessagesDataSource`
+    /// method `messageForItem(at:indexPath:messagesCollectionView)`.
+    func didStopSwipe(in cell: MessageContentCell)
 }
 
 public extension MessageCellDelegate {
@@ -189,4 +197,5 @@ public extension MessageCellDelegate {
     
     func didTapAccessoryView(in cell: MessageCollectionViewCell) {}
 
+    func didStopSwipe(in cell: MessageContentCell) { }
 }

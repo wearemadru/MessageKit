@@ -42,4 +42,7 @@ open class MessageCollectionViewCell: UICollectionViewCell {
         // Should be overridden
     }
 
+    open func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
+        
+    }
 }

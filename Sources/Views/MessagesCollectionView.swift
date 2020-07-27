@@ -87,6 +87,9 @@ open class MessagesCollectionView: UICollectionView {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(_:)))
         tapGesture.delaysTouchesBegan = true
         addGestureRecognizer(tapGesture)
+        
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
+        addGestureRecognizer(panGesture)
     }
     
     @objc
@@ -100,6 +103,15 @@ open class MessagesCollectionView: UICollectionView {
         cell?.handleTapGesture(gesture)
     }
 
+    @objc
+    open func handlePanGesture(_ gesture: UIPanGestureRecognizer) {        
+        let touchLocation = gesture.location(in: self)
+        guard let indexPath = indexPathForItem(at: touchLocation) else { return }
+        
+        let cell = cellForItem(at: indexPath) as? MessageCollectionViewCell
+        cell?.handlePanGesture(gesture)
+    }
+    
     // NOTE: It's possible for small content size this wouldn't work - https://github.com/MessageKit/MessageKit/issues/725
     public func scrollToLastItem(at pos: UICollectionView.ScrollPosition = .bottom, animated: Bool = true) {
         guard numberOfSections > 0 else { return }

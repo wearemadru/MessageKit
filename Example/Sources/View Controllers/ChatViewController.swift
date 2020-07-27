@@ -51,7 +51,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
         
         configureMessageCollectionView()
         configureMessageInputBar()
-        loadFirstMessages()
+//        loadFirstMessages()
         title = "MessageKit"
     }
     
@@ -70,32 +70,6 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
         audioController.stopAnyOngoingPlaying()
     }
     
-    func loadFirstMessages() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let count = UserDefaults.standard.mockMessagesCount()
-            SampleData.shared.getMessages(count: count) { messages in
-                DispatchQueue.main.async {
-                    self.messageList = messages
-                    self.messagesCollectionView.reloadData()
-                    self.messagesCollectionView.scrollToBottom()
-                }
-            }
-        }
-    }
-    
-    @objc
-    func loadMoreMessages() {
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) {
-            SampleData.shared.getMessages(count: 20) { messages in
-                DispatchQueue.main.async {
-                    self.messageList.insert(contentsOf: messages, at: 0)
-                    self.messagesCollectionView.reloadDataAndKeepOffset()
-                    self.refreshControl.endRefreshing()
-                }
-            }
-        }
-    }
-    
     func configureMessageCollectionView() {
         
         messagesCollectionView.messagesDataSource = self
@@ -105,7 +79,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
         maintainPositionOnKeyboardFrameChanged = true // default false
         
         messagesCollectionView.addSubview(refreshControl)
-        refreshControl.addTarget(self, action: #selector(loadMoreMessages), for: .valueChanged)
+//        refreshControl.addTarget(self, action: #selector(loadMoreMessages), for: .valueChanged)
     }
     
     func configureMessageInputBar() {
@@ -186,6 +160,25 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
 // MARK: - MessageCellDelegate
 
 extension ChatViewController: MessageCellDelegate {
+    
+    func didStopSwipe(in cell: MessageContentCell) {
+        guard let indexPath = messagesCollectionView.indexPath(for: cell),
+            let message = messagesCollectionView.messagesDataSource?.messageForItem(at: indexPath, in: messagesCollectionView) as? MockMessage else {
+                print("Failed to identify message when audio cell receive tap gesture")
+                return
+        }
+        switch message.kind {
+        case .text(let text):
+            let text = InputBarButtonItem().configure {
+                $0.title = text
+            }
+            messageInputBar.setStackViewItems([text], forStack: .top, animated: false)
+        default:
+            break
+        }
+//        messageInputBar.
+//        print(messag)
+    }
     
     func didTapAvatar(in cell: MessageCollectionViewCell) {
         print("Avatar tapped")

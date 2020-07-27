@@ -219,8 +219,8 @@ final internal class SampleData {
         // Enable Custom Messages
         UserDefaults.standard.set(true, forKey: "Custom Messages")
         for _ in 0..<count {
-            let message = randomMessage(allowedSenders: senders)
-            messages.append(message)
+//            let message = randomMessage(allowedSenders: senders)
+//            messages.append(message)
         }
         completion(messages)
     }
@@ -237,7 +237,7 @@ final internal class SampleData {
             let message = MockMessage(text: randomSentence, user: user, messageId: uniqueID, date: date)
             messages.append(message)
         }
-        completion(messages)
+//        completionx(messages)
     }
 
     func getAvatarFor(sender: SenderType) -> Avatar {
